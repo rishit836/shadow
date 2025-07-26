@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'styles/product.css' %}">
+{% endblock head %}
+{% block body %}
+<div class="product-container">
+    <div class="heading">
+        <h1>
+            PRODUCTS
+        </h1>
+    </div>
+
+    <div class="card-container">
+        <div class="card">
+            <div class="card-img">
+
+            </div>
+            <div class="card-title">
+                shopping list
+            </div>
+            <div class="card-desc">
+                it lets you create a shopping list with links to products
+                and also calculate the total price of the goods.
+            </div>
+            <div class="open-button">
+                <a href="{% url 'widget:shopping' %}">open</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

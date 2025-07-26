@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'styles/shopping.css' %}">
+{% endblock head %}
+{% block body %}
+<div class="shopping-container">
+    <div class="heading">
+        <h1>Edit Item</h1>
+    </div>
+    <div class="content">
+        <div class="form-container">
+            <form method="POST">
+                {% csrf_token %}
+                <label for="item-name">Item Name:</label><br>
+                <input type="text" name="item-name" value="{{ item.name }}" required><br>
+                <label for="item-link">Item Link:</label><br>
+                <input type="text" name="item-link" value="{{ item.link }}"><br>
+                <label for="item-price">Price:</label><br>
+                <input type="text" name="item-price" value="{{ item.price }}" required><br>
+                <button type="submit" class="action-btn edit-btn">Save</button>
+                <a href="{% url 'widget:shopping' %}" class="action-btn bought-btn">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

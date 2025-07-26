@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'styles/widget_home.css' %}">
+{% endblock head %}
+{% block body %}
+<div class="widget-container">
+    <div class="heading">
+        <h1>
+            WIDGETS
+        </h1>
+    </div>
+    <div class="doodle-container">
+        <img src="{% static 'images/404-doodle.png' %}" alt="404 panda doodle">
+    </div>
+
+</div>
+{% endblock body %}

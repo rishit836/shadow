@@ -1,0 +1,193 @@
+.shopping-container{
+    display:flex;
+    width: 100%;
+    margin: auto;
+    justify-content: center;
+    flex-direction: column;
+    flex-wrap: wrap;
+
+}
+.heading{
+    color: white;
+    margin-top: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    
+}
+.heading h1{
+    font-weight: 200;
+    font-size: 2rem;
+}
+
+.content{
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    justify-content: center;
+    align-items: center;
+
+
+}
+.content .heading{
+    width: 100%;
+    height: 100%;
+}
+
+
+.content .heading h1{
+    /* width: 100%; */
+    font-size: 2.3rem;
+    font-weight: 400;
+
+
+}
+
+.form-container{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    justify-content: center;
+    align-items: center;
+    background-color: #47807f;
+    margin: 0px 50px;
+    border: none;
+    border-radius: 15px;
+
+
+
+}
+.form-container form{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 30px;
+    width: 100%;
+
+
+}
+
+.form-container form label{
+    color:white;
+    font-size: 1.4rem;
+}
+
+.form-container form input{
+    width: 20%;
+    border: none;
+    border-radius: 7px;
+    background-color: #F5F1ED;
+    transition: all .4s;
+    color: black;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 0px 20px;
+}
+.form-container form input:hover{
+    width: 25%;
+    border: none;
+}.form-container form input:focus{
+    field-sizing: content;
+    
+}
+
+
+.form-container form button{
+    border: none;
+    border-radius: 6px;
+    width: 20%;
+    text-align: center;
+    margin-bottom: 60px;
+    margin-top: 30px;
+    transition: all .5s;
+    background-color: #7372a3;
+    color: white;
+}
+.form-container form button:hover{
+    width:22%;
+    color:black;
+    background-color: #F5F1ED;
+}
+
+
+
+.goods-container{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    justify-content: center;
+    align-items: center;
+    margin: 0px 50px;
+}
+
+/* Shopping Table Styles */
+.shopping-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #252323;
+    color: #F5F1ED;
+    border-radius: 12px;
+    overflow: hidden;
+    /* box-shadow: 0 4px 24px 0 rgba(71,128,127,0.15); */
+    margin-top: 30px;
+    font-size: 1.1rem;
+}
+.shopping-table th, .shopping-table td {
+    padding: 16px 18px;
+    text-align: center;
+}
+.shopping-table th {
+    background: #47807f;
+    color: #fff;
+    font-weight: 500;
+    font-size: 1.15rem;
+    border-bottom: 2px solid #7372a3;
+}
+
+.shopping-table tr {
+    background: #252323;
+}
+
+.shopping-table tr:last-child td {
+    border-bottom: white;
+}
+.item-link {
+    color: #47807f;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.item-link:hover {
+    color: #7372a3;
+    text-decoration: none;
+}
+
+/* Action buttons for table */
+.action-btn {
+    display: inline-block;
+    padding: 6px 16px;
+    margin: 0 4px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    text-decoration: none;
+    color: #fff;
+}
+.edit-btn {
+    background: #47807f;
+}
+.edit-btn:hover {
+    background: #355e5d;
+}
+.bought-btn {
+    background: #7372a3;
+    color: #fff;
+}
+.bought-btn:hover {
+    background: #F5F1ED;
+    color: #252323;
+}

@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'styles/home.css' %}">
+{% endblock head %}
+{% block body %}
+<div class="main-container">
+    <div class="heading">
+        {% if request.user.is_authenticated %}
+        <h1>welcome {{request.user.username|lower}},</h1>
+        {% endif %}
+        <h1>
+            
+        </h1>
+    </div>
+{% endblock body %}

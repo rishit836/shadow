@@ -1,0 +1,78 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'styles/shopping.css' %}">
+{% endblock head %}
+{% block body %}
+<div class="shopping-container">
+    <div class="heading">
+        <h1>
+            shopping list
+        </h1>
+    </div>
+
+    <div class="content">
+    <div class="form-container">
+        <div class="heading">
+            <h1>add a item</h1>
+        </div>
+        <form action="{% url 'widget:shopping' %}" method="POST">
+            {% csrf_token %}
+            <label for="item name">item name:</label> <br>
+            <input type="text" placeholder="item name" name="item-name">
+            <label for="item link"> item link:</label> <br>
+            <input type="text" name="item-link" placeholder="item link">
+            <label for="price">enter price:</label> <br>
+            <input type="text" name="item-price" placeholder="item price" id="">
+            <button type="submit">submit</button>
+        </form>
+    </div>
+    {% if list_exists %}
+    <div class="goods-container">
+        <div class="heading">
+            <h1>goods</h1>
+        </div>
+        <div class="table-container">
+            <table class="shopping-table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Link</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                        </tr>
+                </thead>
+                <tbody>
+                {% for item in shopping_items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>
+                            {% if item.link %}
+                                <a href="{{ item.link }}" target="_blank" class="item-link">view</a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>₹{{ item.price }}</td>
+                        <td style="white-space:nowrap;">
+                            <a href="{% url 'widget:edit_item' item.id %}" class="action-btn edit-btn">Edit</a>
+                            <form action="{% url 'widget:delete_item' item.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn bought-btn">Bought</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align:center; color:#aaa;">No items yet.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock body %}
