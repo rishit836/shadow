@@ -45,8 +45,9 @@
 }
 .card-img{
     max-width: 60%;
-    min-height: 50px;
-    background-color: #F5F1ED;;
+    min-width: 150px;
+    min-height: 150px;
+    background-color: rgba(0,0,0,.5);;
     margin: 20px 0px;
     padding: 0px 20px;
 }
@@ -82,9 +83,10 @@
     border: none;
     border-radius: 4px;
     transition: all .5s;
+    margin-bottom: 20px;;
 }
 .open-button a:hover{
-    background-color: #E32D2D;
+    background-color: #00b186;
     min-width: 80%;
 
 }

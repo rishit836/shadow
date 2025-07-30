@@ -14,6 +14,9 @@ def push_item(user,item_name,item_link,item_price):
         except:
             print("error getting price automatically.")
             item_price = 0
+    if item_price is None:
+        print("couldnt fetch price")
+        item_price = 0
     new_item = ShoppingListItem(user=user,name=item_name,price=item_price,link=item_link)
     new_item.save()
 
