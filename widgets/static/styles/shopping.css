@@ -50,10 +50,13 @@
     width: 50%;
     justify-content: center;
     align-items: center;
-    background-color: #47807f;
+    /* background-color: #47807f; */
+    background-color: rgba(0,0,0,.4);
     margin: 0px 50px;
-    border: none;
+    /* border: none; */
     border-radius: 15px;
+    
+    border: 1px solid #4843DE;
 
 
 
@@ -75,9 +78,11 @@
 
 .form-container form input{
     width: 20%;
-    border: none;
+    border: 1px solid #4843DE;
+
     border-radius: 7px;
-    background-color: #F5F1ED;
+    /* background-color: #F5F1ED; */
+    background-color: rgba(0,0,0,.2);
     transition: all .4s;
     color: black;
     text-align: center;
@@ -86,9 +91,6 @@
 }
 .form-container form input:hover{
     width: 25%;
-    border: none;
-}.form-container form input:focus{
-    field-sizing: content;
     
 }
 
@@ -101,7 +103,7 @@
     margin-bottom: 60px;
     margin-top: 30px;
     transition: all .5s;
-    background-color: #7372a3;
+    background-color: #4843DE;
     color: white;
 }
 .form-container form button:hover{

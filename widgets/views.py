@@ -48,3 +48,6 @@ def shopping_list(request):
             "shopping_items": shopping_items
         })
     return render(request, 'shopping.html', context=context)
+
+def finance(request):
+    return render(request,"finance.html")
