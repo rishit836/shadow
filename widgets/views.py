@@ -37,8 +37,8 @@ def buy_item(request, item_id):
         # Get or create finance profile
         profile, created = FinanceProfile.objects.get_or_create(user=request.user)
         
-        # Check if user can afford the item
-        if item.can_afford:
+        # Check if user has enough total funds
+        if profile.total_funds >= item.price:
             # Create transaction
             category = 'needs' if item.priority else 'wants'
             Transaction.objects.create(
@@ -53,13 +53,35 @@ def buy_item(request, item_id):
             profile.total_funds -= item.price
             profile.save()
             
+            # Check if this puts them over budget and give friendly warning
+            if profile.monthly_income > 0:
+                budget = profile.budget_allocation
+                import datetime
+                thirty_days_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+                spent_this_month = Transaction.objects.filter(
+                    finance_profile=profile,
+                    category=category,
+                    transaction_type='debit',
+                    created_at__gte=thirty_days_ago
+                ).aggregate(total=Sum('amount'))['total'] or 0
+                
+                category_budget = budget.get(category, 0)
+                if float(spent_this_month) > category_budget:
+                    overspend = float(spent_this_month) - category_budget
+                    messages.warning(request, f"You've exceeded your {category} budget by ₹{overspend:.2f} this month. Consider adjusting your spending.")
+            
             # Remove item from shopping list
             item_name = item.name
             item.delete()
             
-            messages.success(request, f"Successfully purchased '{item_name}' for ₹{item.price}!")
+            if item.priority:
+                messages.success(request, f"✅ Successfully purchased essential item '{item_name}' for ₹{item.price}!")
+            else:
+                messages.success(request, f"🛍️ Successfully purchased '{item_name}' for ₹{item.price}!")
+                
         else:
-            messages.error(request, "Cannot afford this item right now. Check your budget!")
+            shortage = item.price - profile.total_funds
+            messages.error(request, f"❌ You need ₹{shortage:.2f} more to buy this item. Current balance: ₹{profile.total_funds}")
     
     return redirect(reverse("widget:shopping"))
 
@@ -108,42 +130,48 @@ def get_smart_tips(profile):
     """Generate smart financial tips based on user's spending patterns"""
     tips = []
     
-    if profile.financial_score < 60:
-        tips.append("Your spending seems high. Try the 50/30/20 rule: 50% needs, 30% wants, 20% savings.")
+    # Only give budget advice if they have set monthly income
+    if profile.monthly_income > 0:
+        if profile.financial_score < 60:
+            tips.append("💡 Your spending patterns could improve. Try the 50/30/20 rule: 50% needs, 30% wants, 20% savings.")
+        
+        transactions = profile.transactions.filter(
+            created_at__gte=datetime.datetime.now() - datetime.timedelta(days=30)
+        )
+        
+        wants_spending = transactions.filter(category='wants', transaction_type='debit').aggregate(
+            total=Sum('amount'))['total'] or 0
+        
+        if wants_spending > profile.monthly_income * Decimal('0.4'):
+            tips.append("⚠️ Your entertainment/luxury spending is high. Consider reducing wants to improve financial health.")
+        
+        savings_rate = profile.transactions.filter(category='savings', transaction_type='credit').aggregate(
+            total=Sum('amount'))['total'] or 0
+        
+        if savings_rate < profile.monthly_income * Decimal('0.15'):
+            tips.append("💰 Try to save at least 15% of your income for emergencies and future goals.")
+    else:
+        tips.append("📊 Set your monthly income in the finance settings for personalized budget advice!")
     
-    transactions = profile.transactions.filter(
-        created_at__gte=datetime.datetime.now() - datetime.timedelta(days=30)
-    )
-    
-    wants_spending = transactions.filter(category='wants', transaction_type='debit').aggregate(
-        total=Sum('amount'))['total'] or 0
-    
-    if wants_spending > profile.monthly_income * Decimal('0.4'):
-        tips.append("Consider reducing entertainment and luxury expenses to improve your financial health.")
-    
-    savings_rate = profile.transactions.filter(category='savings').aggregate(
-        total=Sum('amount'))['total'] or 0
-    
-    if savings_rate < profile.monthly_income * Decimal('0.15'):
-        tips.append("Aim to save at least 15% of your income for emergencies and future goals.")
-    
-    if profile.total_funds < profile.monthly_income:
-        tips.append("Build an emergency fund equal to 3-6 months of expenses for financial security.")
+    if profile.total_funds < (profile.monthly_income if profile.monthly_income > 0 else 10000):
+        tips.append("🏦 Build an emergency fund for unexpected expenses and financial security.")
     
     # Shopping list related tips
     shopping_items = ShoppingListItem.objects.filter(user=profile.user)
     if shopping_items.exists():
-        affordable_items = [item for item in shopping_items if item.can_afford]
+        affordable_items = [item for item in shopping_items if profile.total_funds >= item.price]
         if affordable_items:
-            tips.append(f"🛒 You can afford {len(affordable_items)} items from your shopping list!")
+            tips.append(f"🛒 You have funds to buy {len(affordable_items)} items from your shopping list!")
         
-        total_shopping_value = sum(float(item.price) for item in shopping_items)
-        if total_shopping_value > float(profile.total_funds):
-            tips.append("Your shopping list total exceeds your current funds. Prioritize 'needs' over 'wants'.")
+        needs_items = shopping_items.filter(priority=True)
+        if needs_items.exists():
+            affordable_needs = [item for item in needs_items if profile.total_funds >= item.price]
+            if affordable_needs:
+                tips.append(f"⚡ Focus on your {len(affordable_needs)} affordable essential items first!")
     
     if not tips:
-        tips.append("Great job! Your financial habits look healthy. Keep up the good work!")
-        tips.append("Consider investing your savings for long-term wealth building.")
+        tips.append("🎉 Great job! Your financial habits look healthy. Keep up the good work!")
+        tips.append("📈 Consider investing your savings for long-term wealth building.")
     
     return tips[:4]  # Return max 4 tips
 

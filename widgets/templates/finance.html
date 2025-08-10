@@ -102,8 +102,13 @@
                                 <div class="transaction-desc">{{ transaction.description }}</div>
                                 <div class="transaction-category">{{ transaction.get_category_display }}</div>
                             </div>
-                            <div class="transaction-amount">
-                                {% if transaction.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ transaction.amount }}
+                            <div class="transaction-right">
+                                <div class="transaction-amount">
+                                    {% if transaction.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ transaction.amount }}
+                                </div>
+                                <button class="remove-transaction-btn" onclick="removeTransaction({{ transaction.id }})" title="Remove transaction">
+                                    ×
+                                </button>
                             </div>
                         </div>
                     {% empty %}

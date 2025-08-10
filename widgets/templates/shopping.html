@@ -69,9 +69,8 @@
                             <a href="{% url 'widget:edit_item' item.id %}" class="action-btn edit-btn">Edit</a>
                             <form action="{% url 'widget:buy_item' item.id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="action-btn bought-btn" 
-                                        {% if not item.can_afford %}disabled title="Cannot afford this item"{% endif %}>
-                                    Buy
+                                <button type="submit" class="action-btn bought-btn">
+                                    {% if item.priority %}Buy Essential{% else %}Buy Item{% endif %}
                                 </button>
                             </form>
                             <form action="{% url 'widget:remove_item' item.id %}" method="post" style="display:inline;">
