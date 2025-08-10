@@ -18,6 +18,11 @@
                 <input type="text" name="item-link" value="{{ item.link }}"><br>
                 <label for="item-price">Price:</label><br>
                 <input type="text" name="item-price" value="{{ item.price }}" required><br>
+                <label for="item-priority">Item Type:</label><br>
+                <select name="item-priority" id="item-priority">
+                    <option value="want" {% if not item.priority %}selected{% endif %}>Want</option>
+                    <option value="need" {% if item.priority %}selected{% endif %}>Need</option>
+                </select><br>
                 <button type="submit" class="action-btn edit-btn">Save</button>
                 <a href="{% url 'widget:shopping' %}" class="action-btn bought-btn">Cancel</a>
             </form>

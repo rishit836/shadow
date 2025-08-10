@@ -23,7 +23,12 @@
             <label for="item link"> item link:</label> <br>
             <input type="text" name="item-link" placeholder="item link">
             <label for="price">enter price:</label> <br>
-            <input type="text" name="item-price" placeholder="item price" id="">
+            <input type="text" name="item-price" placeholder="Enter amount (e.g., 2000 or 2000.50)" id="">
+            <label for="item-priority">item type:</label> <br>
+            <select name="item-priority" id="item-priority">
+                <option value="want">Want</option>
+                <option value="need">Need</option>
+            </select>
             <button type="submit">submit</button>
         </form>
     </div>
@@ -39,6 +44,8 @@
                         <th>Item Name</th>
                         <th>Link</th>
                         <th>Price</th>
+                        <th>Type</th>
+                        <th>Budget Status</th>
                         <th>Actions</th>
                         </tr>
                 </thead>
@@ -54,11 +61,24 @@
                             {% endif %}
                         </td>
                         <td>₹{{ item.price }}</td>
+                        <td>{% if item.priority %}Need{% else %}Want{% endif %}</td>
+                        <td class="affordability-status">
+                            <span class="status-message">{{ item.affordability_message }}</span>
+                        </td>
                         <td style="white-space:nowrap;">
                             <a href="{% url 'widget:edit_item' item.id %}" class="action-btn edit-btn">Edit</a>
-                            <form action="{% url 'widget:delete_item' item.id %}" method="post" style="display:inline;">
+                            <form action="{% url 'widget:buy_item' item.id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="action-btn bought-btn">Bought</button>
+                                <button type="submit" class="action-btn bought-btn" 
+                                        {% if not item.can_afford %}disabled title="Cannot afford this item"{% endif %}>
+                                    Buy
+                                </button>
+                            </form>
+                            <form action="{% url 'widget:remove_item' item.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn remove-btn" onclick="return confirm('Remove this item from your list?')">
+                                    Remove
+                                </button>
                             </form>
                         </td>
                     </tr>

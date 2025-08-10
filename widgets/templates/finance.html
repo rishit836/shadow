@@ -2,9 +2,394 @@
 {% load static %}
 {% block head %}
     <link rel="stylesheet" href="{% static 'styles/finance.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 {% block body %}
     <div class="finance-container">
+        <!-- Header Section -->
+        <div class="finance-header">
+            <div class="welcome-section">
+                <h1>Welcome back, {{ request.user.username|title }}</h1>
+                <p>Manage your finances smartly</p>
+            </div>
+            <div class="financial-score">
+                <div class="score-circle">
+                    <div class="score-value">{{ financial_score }}</div>
+                    <div class="score-label">Financial Score</div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Main Dashboard -->
+        <div class="dashboard-grid">
+            <!-- Current Funds Card -->
+            <div class="finance-card funds-card">
+                <div class="card-header">
+                    <h3>Current Balance</h3>
+                    <button class="action-btn primary" onclick="openDialog('fundsDialog')">
+                        <span>+</span>
+                    </button>
+                </div>
+                <div class="funds-display">
+                    <span class="currency">₹</span>
+                    <span class="amount">{{ total_funds|floatformat:2 }}</span>
+                </div>
+                <div class="funds-actions">
+                    <button class="action-btn success" onclick="openDialog('addMoneyDialog')">
+                        Add Money
+                    </button>
+                    <button class="action-btn danger" onclick="openDialog('deductMoneyDialog')">
+                        Deduct Money
+                    </button>
+                </div>
+            </div>
+
+            <!-- Budget Allocation Card -->
+            <div class="finance-card budget-card">
+                <div class="card-header">
+                    <h3>Smart Budget Allocation</h3>
+                </div>
+                <div class="budget-breakdown">
+                    <div class="budget-item needs">
+                        <div class="budget-label">Needs (50%)</div>
+                        <div class="budget-amount">₹{{ budget_allocation.needs|floatformat:2 }}</div>
+                        <div class="budget-progress">
+                            <div class="progress-bar" style="width: {{ needs_percentage }}%"></div>
+                        </div>
+                        <div class="budget-spent">Spent: ₹{{ needs_spent|floatformat:2 }}</div>
+                    </div>
+                    <div class="budget-item wants">
+                        <div class="budget-label">Wants (30%)</div>
+                        <div class="budget-amount">₹{{ budget_allocation.wants|floatformat:2 }}</div>
+                        <div class="budget-progress">
+                            <div class="progress-bar" style="width: {{ wants_percentage }}%"></div>
+                        </div>
+                        <div class="budget-spent">Spent: ₹{{ wants_spent|floatformat:2 }}</div>
+                    </div>
+                    <div class="budget-item savings">
+                        <div class="budget-label">Savings (20%)</div>
+                        <div class="budget-amount">₹{{ budget_allocation.savings|floatformat:2 }}</div>
+                        <div class="budget-progress">
+                            <div class="progress-bar" style="width: {{ savings_percentage }}%"></div>
+                        </div>
+                        <div class="budget-spent">Saved: ₹{{ savings_amount|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spending Chart -->
+            <div class="finance-card chart-card">
+                <div class="card-header">
+                    <h3>Spending Distribution</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="spendingChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="finance-card transactions-card">
+                <div class="card-header">
+                    <h3>Recent Transactions</h3>
+                    <button class="action-btn primary" onclick="openDialog('transactionDialog')">
+                        Add Transaction
+                    </button>
+                </div>
+                <div class="transactions-list">
+                    {% for transaction in recent_transactions %}
+                        <div class="transaction-item {{ transaction.transaction_type }}">
+                            <div class="transaction-info">
+                                <div class="transaction-desc">{{ transaction.description }}</div>
+                                <div class="transaction-category">{{ transaction.get_category_display }}</div>
+                            </div>
+                            <div class="transaction-amount">
+                                {% if transaction.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ transaction.amount }}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="no-transactions">
+                            <p>No transactions yet. Start tracking your finances!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Financial Tips -->
+            <div class="finance-card tips-card">
+                <div class="card-header">
+                    <h3>Smart Tips</h3>
+                </div>
+                <div class="tips-content">
+                    {% for tip in smart_tips %}
+                        <div class="tip-item">
+                            <div class="tip-icon">💡</div>
+                            <div class="tip-text">{{ tip }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Shopping List Integration -->
+            <div class="finance-card shopping-integration-card">
+                <div class="card-header">
+                    <h3>Shopping List Status</h3>
+                    <a href="{% url 'widget:shopping' %}" class="action-btn primary">View List</a>
+                </div>
+                <div class="shopping-status">
+                    {% if total_shopping_items > 0 %}
+                        <div class="status-summary">
+                            <div class="status-item">
+                                <div class="status-number">{{ affordable_items|length }}</div>
+                                <div class="status-label">Items You Can Buy</div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-number">{{ total_shopping_items }}</div>
+                                <div class="status-label">Total Items</div>
+                            </div>
+                        </div>
+                        
+                        {% if affordable_items %}
+                            <div class="affordable-items">
+                                <h4>Ready to Purchase:</h4>
+                                {% for item in affordable_items|slice:":3" %}
+                                    <div class="affordable-item">
+                                        <div class="item-info">
+                                            <div class="item-name">{{ item.name }}</div>
+                                            <div class="item-price">₹{{ item.price }}</div>
+                                        </div>
+                                        <div class="item-type">
+                                            {% if item.priority %}Need{% else %}Want{% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                {% if affordable_items|length > 3 %}
+                                    <div class="more-items">
+                                        <a href="{% url 'widget:shopping' %}">View {{ affordable_items|length|add:-3 }} more affordable items →</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="no-affordable-items">
+                                <p>💰 Save up to buy items from your shopping list!</p>
+                                <p>Focus on increasing income or reducing expenses.</p>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="no-shopping-items">
+                            <p>🛒 No items in your shopping list yet.</p>
+                            <p><a href="{% url 'widget:shopping' %}">Add items</a> to see budget recommendations!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Dialogs -->
+    <!-- Edit Funds Dialog -->
+    <div id="fundsDialog" class="dialog-overlay">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3>Update Current Balance</h3>
+                <button class="close-btn" onclick="closeDialog('fundsDialog')">&times;</button>
+            </div>
+            <form method="POST" action="{% url 'widget:finance' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_funds">
+                <div class="form-group">
+                    <label>Current Balance</label>
+                    <input type="number" name="total_funds" step="0.01" value="{{ total_funds }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Monthly Income</label>
+                    <input type="number" name="monthly_income" step="0.01" value="{{ monthly_income }}" required>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn secondary" onclick="closeDialog('fundsDialog')">Cancel</button>
+                    <button type="submit" class="btn primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Money Dialog -->
+    <div id="addMoneyDialog" class="dialog-overlay">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3>Add Money</h3>
+                <button class="close-btn" onclick="closeDialog('addMoneyDialog')">&times;</button>
+            </div>
+            <form method="POST" action="{% url 'widget:finance' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_money">
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" name="amount" step="0.01" placeholder="Enter amount (e.g., 5000)" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="e.g., Salary, Gift" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category" required>
+                        <option value="savings">Savings</option>
+                        <option value="needs">Income for Needs</option>
+                        <option value="wants">Income for Wants</option>
+                    </select>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn secondary" onclick="closeDialog('addMoneyDialog')">Cancel</button>
+                    <button type="submit" class="btn success">Add Money</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Deduct Money Dialog -->
+    <div id="deductMoneyDialog" class="dialog-overlay">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3>Record Expense</h3>
+                <button class="close-btn" onclick="closeDialog('deductMoneyDialog')">&times;</button>
+            </div>
+            <form method="POST" action="{% url 'widget:finance' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="deduct_money">
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" name="amount" step="0.01" placeholder="Enter amount (e.g., 1500)" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="e.g., Groceries, Movies" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category" required>
+                        <option value="needs">Needs (Essential expenses)</option>
+                        <option value="wants">Wants (Entertainment, dining out)</option>
+                        <option value="savings">From Savings</option>
+                    </select>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn secondary" onclick="closeDialog('deductMoneyDialog')">Cancel</button>
+                    <button type="submit" class="btn danger">Record Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Transaction Dialog -->
+    <div id="transactionDialog" class="dialog-overlay">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3>Add Transaction</h3>
+                <button class="close-btn" onclick="closeDialog('transactionDialog')">&times;</button>
+            </div>
+            <form method="POST" action="{% url 'widget:finance' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_transaction">
+                <div class="form-group">
+                    <label>Transaction Type</label>
+                    <select name="transaction_type" required>
+                        <option value="credit">Income/Credit</option>
+                        <option value="debit">Expense/Debit</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" name="amount" step="0.01" placeholder="Enter amount" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="Transaction description" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category" required>
+                        <option value="needs">Needs</option>
+                        <option value="wants">Wants</option>
+                        <option value="savings">Savings</option>
+                    </select>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn secondary" onclick="closeDialog('transactionDialog')">Cancel</button>
+                    <button type="submit" class="btn primary">Add Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Dialog management
+        function openDialog(dialogId) {
+            document.getElementById(dialogId).style.display = 'flex';
+        }
+        
+        function closeDialog(dialogId) {
+            document.getElementById(dialogId).style.display = 'none';
+        }
+        
+        // Close dialog when clicking outside
+        document.querySelectorAll('.dialog-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+        // Pie Chart for spending distribution
+        const ctx = document.getElementById('spendingChart').getContext('2d');
+        const spendingChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Needs', 'Wants', 'Savings'],
+                datasets: [{
+                    data: [{{ needs_spent }}, {{ wants_spent }}, {{ savings_amount }}],
+                    backgroundColor: [
+                        '#FF6B6B',  // Red for needs
+                        '#4ECDC4',  // Teal for wants
+                        '#45B7D1'   // Blue for savings
+                    ],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#ffffff',
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Animate financial score on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const scoreElement = document.querySelector('.score-value');
+            const finalScore = {{ financial_score }};
+            let currentScore = 0;
+            
+            const scoreAnimation = setInterval(() => {
+                currentScore += 2;
+                scoreElement.textContent = Math.min(currentScore, finalScore);
+                
+                if (currentScore >= finalScore) {
+                    clearInterval(scoreAnimation);
+                }
+            }, 30);
+        });
+    </script>
 {% endblock %}

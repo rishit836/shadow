@@ -7,17 +7,53 @@ import json
 headers = {
     "User-Agent": "Mozilla/5.0"
 }
-def push_item(user,item_name,item_link,item_price):
-    if item_price is None or item_price.lower()=="auto":
+
+def clean_price_input(price_input):
+    """
+    Clean price input by removing currency symbols and formatting
+    Returns a float value or 0 if invalid
+    """
+    if not price_input:
+        return 0.0
+    
+    # Convert to string and clean
+    cleaned = str(price_input).strip()
+    
+    # Remove common currency symbols and formatting
+    cleaned = re.sub(r'[₹$€£¥,\s]', '', cleaned)
+    
+    # Handle different decimal separators
+    if '.' in cleaned:
+        parts = cleaned.split('.')
+        if len(parts) == 2:
+            # Normal decimal format
+            cleaned = parts[0] + '.' + parts[1]
+        else:
+            # Multiple dots, take first two parts
+            cleaned = parts[0] + '.' + parts[1] if len(parts) > 1 else parts[0]
+    
+    try:
+        return float(cleaned)
+    except (ValueError, TypeError):
+        return 0.0
+
+def push_item(user, item_name, item_link, item_price, priority=False):
+    # Clean the price input using our helper function
+    item_price = clean_price_input(item_price)
+    
+    if item_price == 0 or str(item_price).lower() == "auto":
         try:
             item_price = extract_price(item_link)
+            item_price = clean_price_input(item_price) if item_price else 0.0
         except:
             print("error getting price automatically.")
-            item_price = 0
+            item_price = 0.0
+    
     if item_price is None:
         print("couldnt fetch price")
-        item_price = 0
-    new_item = ShoppingListItem(user=user,name=item_name,price=item_price,link=item_link)
+        item_price = 0.0
+    
+    new_item = ShoppingListItem(user=user, name=item_name, price=item_price, link=item_link, priority=priority)
     new_item.save()
 
 def fetch_html(url):
