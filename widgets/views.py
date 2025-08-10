@@ -1,5 +1,5 @@
 from .models import ShoppingListItem, finance, FinanceProfile, Transaction
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.db.models import Sum
 from decimal import Decimal, InvalidOperation
@@ -96,7 +96,6 @@ def remove_item(request, item_id):
     
     return redirect(reverse("widget:shopping"))
 
-from django.shortcuts import render,redirect
 from django.urls import reverse
 from .operations import push_item,list_exists, clean_price_input
 
@@ -320,3 +319,40 @@ def finance_view(request):
     }
     
     return render(request, "finance.html", context)
+
+
+def remove_transaction(request):
+    """Remove a transaction and redirect back to finance page"""
+    if request.method == 'POST':
+        transaction_id = request.POST.get('transaction_id')
+        try:
+            # Get the transaction and verify it belongs to the current user
+            transaction = Transaction.objects.get(
+                id=transaction_id, 
+                profile__user=request.user
+            )
+            
+            # Get the profile to update funds
+            profile = FinanceProfile.objects.get(user=request.user)
+            
+            # Reverse the transaction effect on total funds
+            if transaction.transaction_type == 'credit':
+                # If it was a credit, subtract it from total funds
+                profile.total_funds -= transaction.amount
+            else:
+                # If it was a debit, add it back to total funds
+                profile.total_funds += transaction.amount
+            
+            profile.save()
+            
+            # Delete the transaction
+            transaction.delete()
+            
+            messages.success(request, f'Transaction "{transaction.description}" removed successfully!')
+            
+        except Transaction.DoesNotExist:
+            messages.error(request, 'Transaction not found or you do not have permission to remove it.')
+        except Exception as e:
+            messages.error(request, 'An error occurred while removing the transaction.')
+    
+    return redirect('widget:finance')
